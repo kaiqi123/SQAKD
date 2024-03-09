@@ -49,6 +49,3 @@ We used four Nvidia RTX 2080 GPUs for model training and conduct inference exper
 ## Reference License
 
 The project of Mqbench is under Apache 2.0 License.
-
-
-# SQAKD
