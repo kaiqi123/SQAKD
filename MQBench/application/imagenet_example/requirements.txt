@@ -1,0 +1,44 @@
+torch>=1.8.1
+torchvision
+pycuda
+
+
+# ==== new add on 06/06/2023, works
+# python3.9 -m pip install pycuda
+# python3.9 -m pip install nvidia-tensorrt==8.4.1.5
+
+# python3.9
+# >>> import tensorrt
+# >>> print(tensorrt.__version__)
+# >>> assert tensorrt.Builder(tensorrt.Logger())
+
+
+
+# ====== some logs, not work ======
+# ==== Inside Docker, not work
+# sudo python3 -m pip install pycuda
+# sudo pip3 install pycuda==
+# sudo python3 -m pip install nvidia-tensorrt==8.4.1.5
+# python3 -m pip install --upgrade tensorrt
+
+
+# docker run --rm -it \
+# -v /home/users/kzhao27/imagenet_data:/workspace/imagenet_data \
+# -v /home/users/kzhao27/imagenet_data_10categories:/workspace/imagenet_data_10categories \
+# -v /home/users/kzhao27/tiny-imagenet-200:/workspace/tiny-imagenet-200 \
+# -v /home/users/kzhao27/quantization/important/my_new_mqbench:/workspace/my_new_mqbench \
+# --gpus all \
+# nvcr.io/nvidia/pytorch:23.01-py3
+
+
+# docker run --rm -it \
+# -v /home/users/kzhao27/imagenet_data:/workspace/imagenet_data \
+# -v /home/users/kzhao27/imagenet_data_10categories:/workspace/imagenet_data_10categories \
+# -v /home/users/kzhao27/tiny-imagenet-200:/workspace/tiny-imagenet-200 \
+# -v /home/users/kzhao27/quantization/important/my_new_mqbench:/workspace/my_new_mqbench \
+# --gpus all \
+# nvcr.io/nvidia/tensorrt:23.05-py3
+
+
+# docker run -it --network=host --runtime=nvidia \
+# --gpus all --shm-size 512G -v /home/yitao/Code:/workspace/Code nvcr.io/nvidia/pytorch:23.01-py3
