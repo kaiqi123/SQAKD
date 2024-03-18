@@ -247,7 +247,6 @@ class ResNet(nn.Module):
 #     """
 #     return _resnet('resnet18', BasicBlock, [2, 2, 2, 2], pretrained, progress, **kwargs)
 
-# new
 def _resnet(arch, block, layers, pretrained, progress, num_classes, **kwargs):
     printRed(f"===> Create model: {arch}")
     model = ResNet(block, layers, num_classes, **kwargs)

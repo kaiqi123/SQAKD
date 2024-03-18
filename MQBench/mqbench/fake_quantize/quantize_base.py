@@ -5,11 +5,6 @@ from torch.quantization.fake_quantize import _is_per_channel, _is_per_tensor
 
 from mqbench.utils import is_symmetric_quant
 
-# new
-import math
-from mqbench.fake_quantize.u_scheduler import *
-import sys
-
 class QuantizeBase(FakeQuantizeBase):
     r""" This is an extension of the FakeQuantize module in fake_quantize.py, which
     supports more generalized lower-bit quantization and support learning of the scale
@@ -50,25 +45,3 @@ class QuantizeBase(FakeQuantizeBase):
                    self.fake_quant_enabled, self.observer_enabled,
                    self.quant_min, self.quant_max,
                    self.dtype, self.qscheme, self.ch_axis)
-
-    # new add
-    def define_u_scheduler(self, method, u_init, u_max):
-        total_steps = 250000 # 250000, 2503 per epoch
-        steps_for_updating = total_steps
-        
-        # exponential
-        exp_base = math.e
-        u_base = math.log(u_init, exp_base)
-        scheduler_exp_k = (math.log(u_max, exp_base)-u_base)/steps_for_updating
-        u_scheduler = ExpU_Scheduler(u_base=u_base, u_max=u_max, k=scheduler_exp_k, exp_base=exp_base)
-        print(f"Method: {method}, total_steps: {total_steps}, u_scheduler: exp; u_base={u_base}, k={scheduler_exp_k}, u_init={u_init}, u_max={u_max}")
-        
-        # exponential_up_down
-        # steps_for_increasing = int(steps_for_updating/2)
-        # exp_base = math.e
-        # u_base = math.log(u_init, exp_base)
-        # scheduler_exp_k = (math.log(u_max, exp_base)-u_base)/steps_for_increasing
-        # u_scheduler = ExpU_Up_Down_Scheduler(u_base=u_base, u_max=u_max, k=scheduler_exp_k, exp_base=exp_base, \
-        #     steps_for_increasing=steps_for_increasing, steps_for_updating=steps_for_updating)
-        # print(f"Method: {method}, u_scheduler: ExpU_Up_Down_Scheduler; u_base={u_base}, k={scheduler_exp_k}, u_init={u_init}, u_max={u_max}, steps_for_increasing: {steps_for_increasing}")
-        return u_scheduler

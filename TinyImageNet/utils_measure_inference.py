@@ -8,7 +8,7 @@ def measure_inference(device, val_loader, model, criterion, val_loader_len, data
     model.eval()
 
 
-    # new add, calculate time
+    # calculate time
     batch_size = val_loader.batch_size
     total_batch = val_loader_len
     require_batch_num = 10
@@ -23,7 +23,6 @@ def measure_inference(device, val_loader, model, criterion, val_loader_len, data
         # val_loader_len = int(val_loader._size / args.batch_size)
 
 
-        # new add
         if batch_idx == start_batch_num + require_batch_num:
             break
         print(f"batch_idx: {batch_idx}")
@@ -48,7 +47,7 @@ def measure_inference(device, val_loader, model, criterion, val_loader_len, data
             eslapse_time_list.append(eslapse_time)
 
 
-    # new add, calculate time
+    # calculate time
     assert require_batch_num == len(eslapse_time_list)
     number_data = batch_size * require_batch_num
     total_eslapse_time = sum(eslapse_time_list)
@@ -56,4 +55,3 @@ def measure_inference(device, val_loader, model, criterion, val_loader_len, data
     inference_time = round(total_eslapse_time/number_data, 10) # unit: s/per image
     num_images_per_second = round(number_data / total_eslapse_time, 4) # unit: number of images/s
     print(f"Throughput: {num_images_per_second}, inference time: {inference_time} (s)")
-    # sys.exit()

@@ -81,7 +81,6 @@ def create_dali_pipeline(data_dir, crop, size, shard_id, num_shards, dali_cpu=Fa
 
 
 def imagenet_data_loader(args):
-    # so far, len(args.data) == 1, like ['/home/vitis-ai-user/tiny-imagenet-200']
     if len(args.data) == 1:
         traindir = os.path.join(args.data[0], 'train')
         valdir = os.path.join(args.data[0], 'val')

@@ -48,7 +48,7 @@ from enum import Enum
 def printRed(skk): print("\033[91m{}\033[00m" .format(skk))
 
 
-# new add from https://github.com/pytorch/vision/blob/8e078971b8aebdeb1746fea58851e3754f103053/torchvision/ops/misc.py
+# from https://github.com/pytorch/vision/blob/8e078971b8aebdeb1746fea58851e3754f103053/torchvision/ops/misc.py
 import collections
 from itertools import repeat
 
@@ -172,7 +172,7 @@ class Conv2dNormActivation(ConvNormActivation):
             torch.nn.Conv2d,
         )
 
-# new add from https://github.com/pytorch/vision/blob/8e078971b8aebdeb1746fea58851e3754f103053/torchvision/utils.py
+# from https://github.com/pytorch/vision/blob/8e078971b8aebdeb1746fea58851e3754f103053/torchvision/utils.py
 from types import FunctionType
 def _log_api_usage_once(obj: Any) -> None:
     
@@ -200,7 +200,6 @@ def _log_api_usage_once(obj: Any) -> None:
     torch._C._log_api_usage_once(f"{module}.{name}")
 
 
-# new add 
 # from . import functional as F, InterpolationMode
 from torchvision.transforms import functional as F, InterpolationMode
 class ImageClassification(nn.Module):
@@ -250,7 +249,7 @@ class ImageClassification(nn.Module):
         )
 
 
-# new add from: https://pytorch.org/vision/main/_modules/torchvision/ops/misc.html#SqueezeExcitation
+# from: https://pytorch.org/vision/main/_modules/torchvision/ops/misc.html#SqueezeExcitation
 class SqueezeExcitation(torch.nn.Module):
     """
     This block implements the Squeeze-and-Excitation block from https://arxiv.org/abs/1709.01507 (see Fig. 1).

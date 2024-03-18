@@ -86,31 +86,21 @@ class VGG(nn.Module):
     def forward(self, x):
         h = x.shape[2]
         x = self.block0(x)
-        # x = F.relu(x)
         x = self.pool0(x)
-        # print(f"block0, before pool: {f0.shape}, after pool: {x.shape}, using pool4: {self.pool4(f0).shape}")
         
         x = self.block1(x)
-        # x = F.relu(x)
         x = self.pool1(x)
-        # print(f"block1, before pool: {f1.shape}, after pool: {x.shape}, using pool4: {self.pool4(f1).shape}")
 
         x = self.block2(x)
-        # x = F.relu(x)
         x = self.pool2(x)
-        # print(f"block2, before pool: {f2.shape}, after pool: {x.shape}, using pool4: {self.pool4(f2).shape}")
 
         x = self.block3(x)
-        # x = F.relu(x)
-        # !!!!!!! org, maybe need it when h==64
         # if h == 64:
             # x = self.pool3(x)
         # print(f"block3, before pool: {f3.shape}, after pool: {x.shape}, using pool4: {self.pool4(f3).shape}")
 
         x = self.block4(x)
-        # x = F.relu(x)
         x = self.pool4(x)
-        # print(f"block4, before pool: {f4.shape}, after pool: {x.shape}")
 
         x = x.view(x.size(0), -1)
         

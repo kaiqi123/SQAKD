@@ -30,31 +30,19 @@ import json
 import gc
 
 # import models.resnet_imagenet as resnet_imagenet_models
-# import torchvision.models as models # official models
-from models import model_dict # our customized models
+# import torchvision.models as models 
+from models import model_dict
 
-from data_loaders.cifar_data_loader import cifar_data_loader
 from data_loaders.imagenet_data_loader import imagenet_data_loader
 
-# try:
-#     from nvidia.dali.plugin.pytorch import DALIClassificationIterator, LastBatchPolicy
-#     from nvidia.dali.pipeline import pipeline_def
-#     import nvidia.dali.types as types
-#     import nvidia.dali.fn as fn
-# except ImportError:
-#     raise ImportError("Please install DALI from https://www.github.com/NVIDIA/DALI to run this example.")
-
-# new
 from tensorboardX import SummaryWriter
 import pprint
 from utils import printRed, makedir, create_logger, get_logger
 import timm
 from GPUtil import showUtilization as gpu_usage
 
-# new add for kd
 from distiller_zoo import DistillKL
 
-# new add for inference time
 from utils_measure_inference import measure_inference
 
 
@@ -62,8 +50,8 @@ from utils_measure_inference import measure_inference
 def parse():
     # model_names = sorted(name for name in models.__dict__
     #                  if name.islower() and not name.startswith("__")
-    #                  and callable(models.__dict__[name])) # official models
-    model_names = model_dict.keys() # our customized models
+    #                  and callable(models.__dict__[name])) 
+    model_names = model_dict.keys()
     parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
     parser.add_argument('data', metavar='DIR', nargs='*',
                         help='path(s) to dataset (if one path is provided, it is assumed\n' +
@@ -101,11 +89,10 @@ def parse():
     parser.add_argument('-t', '--test', action='store_true', help='Launch test mode with preset arguments')
     parser.add_argument('--not-quant', action='store_true')
 
-    # new
     parser.add_argument('--save_root_path', type=str)
     parser.add_argument('--backward_method', type=str, choices=["org","STE","EWGS","Uscheduler","Uscheduler_Pscheduler"])
 
-    # new for kd
+    # For kd
     parser.add_argument('--distill', default=False, type=bool)
     parser.add_argument('--teacher_path', type=str)
     parser.add_argument('--teacher_arch', type=str)
@@ -114,12 +101,12 @@ def parse():
     parser.add_argument('--alpha', type=float, default=None, help='weight balance for KD')
     # parser.add_argument('-b', '--beta', type=float, default=None, help='weight balance for other losses or crd loss')
 
-    # new add for training, following EWGS
+    # For training
     parser.add_argument('--optimizer_type', type=str, default='SGD', choices=('SGD','Adam'), help='optimizer for model paramters')
     # parser.add_argument('--lr_scheduler_type', type=str, default='cosine', choices=('step','cosine'), help='type of the scheduler')
     # parser.add_argument('--lr_decay_schedule', type=str, help='learning rate decaying schedule (for step)')
 
-    # new for intializing from a pretrained model, following EWGS
+    # For intializing from a pretrained model
     parser.add_argument('--load_pretrain', action='store_true', help='load pretrained full-precision model')
     parser.add_argument('--pretrain_path', type=str, help='path for pretrained full-preicion model')
 
@@ -132,7 +119,6 @@ def to_python_float(t):
         return t.item()
     else:
         return t[0]
-
 
 def main():
     global best_prec1, best_prec5, args
@@ -165,7 +151,6 @@ def main():
         # convert_file.write('json_stats: ' + json.dumps(vars(args)) + '\n')
     f = open(outfile, 'a+')
     print('\n\n##################### time: {} ####################'.format(time.ctime()), file=f, flush=True)
-    # sys.exit()
 
     # test mode, use default args for sanity test
     if args.test:
@@ -195,7 +180,6 @@ def main():
             from apex import amp, optimizers, parallel
         except ImportError:
             raise ImportError("Please install apex from https://www.github.com/nvidia/apex to run this example.")
-    #print("world size = {}".format(int(os.environ['WORLD_SIZE'])))
     print("opt_level = {}".format(args.opt_level))
     print("keep_batchnorm_fp32 = {}".format(args.keep_batchnorm_fp32), type(args.keep_batchnorm_fp32))
     print("loss_scale = {}".format(args.loss_scale), type(args.loss_scale))
@@ -230,19 +214,12 @@ def main():
         train_loader_len = int(math.ceil(train_loader._size / args.batch_size))
         val_loader_len = int(val_loader._size / args.batch_size)
         data_loader_type = "dali"
-
-    elif data_name == "cifar10" or data_name == "cifar100":
-        train_loader, val_loader = cifar_data_loader(data_name, args)
-        train_loader_len = len(train_loader)
-        val_loader_len = len(val_loader)
-        data_loader_type = "pytorch"
-
     else:
         raise NotImplementedError
     printRed(f"Data name is: {data_name}, data path is: {args.data}, length of train_loader: {train_loader_len}, length of val_loader_len: {val_loader_len}")
 
 
-    # New add to set num_classes
+    # Set num_classes
     num_classes_dict = {"tiny-imagenet-200": 200, "imagenet_data": 1000, "cifar10": 10, "cifar100": 100}
     data_name = args.data[0].split("/")[-1]
     assert data_name in num_classes_dict.keys()
@@ -251,30 +228,9 @@ def main():
     
 
     # create model
-    # if args.pretrained:
-    #     print("=> Using pre-trained model '{}'".format(args.arch))
-    #     if "resnet" in args.arch:
-    #         model = resnet_imagenet_models.__dict__[args.arch](pretrained=True)
-    #     elif args.arch == "efficientnet_b0":
-    #         model = timm.create_model('efficientnet_lite0', pretrained=True)
-    #     elif args.arch == "mobilenet_v2":
-    #         model = models.mobilenet_v2(pretrained=True, progress=True)
-    #     else:
-    #         raise Error(f"Do not support {args.arch}")
-    # else:
-    #     print("=> Not using pre-trained model, creating model '{}'".format(args.arch))
-    #     if "resnet" in args.arch:
-    #         model = resnet_imagenet_models.__dict__[args.arch](num_classes=num_classes) # Modified num_classes
-    #     elif args.arch == "efficientnet_b0":
-    #         model = timm.create_model('efficientnet_lite0', pretrained=False)
-    #     elif args.arch == "mobilenet_v2":
-    #         model = models.mobilenet_v2(pretrained=False)
-    #     else:
-    #         raise Error(f"Do not support {args.arch}")
     pretrained =  True if args.pretrained else False
-    model = model_dict[args.arch](pretrained=pretrained, num_classes=num_classes) # our customized models, Modified num_classes
-    # model = models.__dict__[args.arch](pretrained=pretrained, num_classes=num_classes) # official models
-    # sys.exit()
+    model = model_dict[args.arch](pretrained=pretrained, num_classes=num_classes) 
+    # model = models.__dict__[args.arch](pretrained=pretrained, num_classes=num_classes)
 
     # initilized by pre-trained model
     if args.load_pretrain:
@@ -285,7 +241,6 @@ def main():
         log_string = ''
         for key in trained_model['state_dict'].keys():
             if key in current_dict.keys():
-                # print(key)
                 log_string += '{}\t'.format(key)
                 current_dict[key].copy_(trained_model['state_dict'][key])
         print(log_string+'\n')
@@ -299,20 +254,19 @@ def main():
     # printRed(f"Evaluate the initial model (student): Prec@1: {pre1_s}, Prec@5: {pre5_s}")
 
 
-    # new added, create teacher
+    # Create teacher
     if args.distill:
-        # org
         # model_t = resnet_imagenet_models.__dict__[args.teacher_arch](num_classes=num_classes)
         if data_name == "imagenet_data":
             # for imagenet, load from official model
             printRed('Creating teacher model, loading from offical website')
-            # model_t = model_dict[args.teacher_arch](pretrained=True, num_classes=num_classes) # our customized models, Modified num_classes
-            model_t = models.__dict__[args.teacher_arch](pretrained=True, num_classes=num_classes) # official models
+            model_t = model_dict[args.teacher_arch](pretrained=True, num_classes=num_classes) 
+            # model_t = models.__dict__[args.teacher_arch](pretrained=True, num_classes=num_classes)
         else:
             # for other datasets, load from the model trained by ourselves
             printRed('Creating teacher model, loading from the model trained by ourselves')
-            model_t = model_dict[args.teacher_arch](pretrained=False, num_classes=num_classes) # our customized models, Modified num_classes
-            # model_t = models.__dict__[args.teacher_arch](pretrained=False, num_classes=num_classes) # official models
+            model_t = model_dict[args.teacher_arch](pretrained=False, num_classes=num_classes)
+            # model_t = models.__dict__[args.teacher_arch](pretrained=False, num_classes=num_classes)
             if os.path.isfile(args.teacher_path):
                 print("Loading checkpoint '{}'".format(args.teacher_path))
                 checkpoint_t = torch.load(args.teacher_path, map_location = lambda storage, loc: storage.cuda(args.gpu))
@@ -323,7 +277,6 @@ def main():
         
         [pre1_t, pre5_t] = validate(val_loader, model_t.cuda(), nn.CrossEntropyLoss().cuda(), val_loader_len, data_loader_type)
         printRed(f"Evaluate the teacher model: Prec@1: {pre1_t}, Prec@5: {pre5_t}")
-        # sys.exit()
 
     if args.quant:
         # model = prepare_by_platform(model, BackendType.Tensorrt)
@@ -350,7 +303,7 @@ def main():
         if args.distill:
             model_t = model_t.cuda().to(memory_format=memory_format)
         
-        # new add for inference
+        # for inference
         # # cpu_name = "all" 
         # cpu_name = "0" # all for all cores, 0 for cpu0, command "htop" to see the utility of each cpu
         # os.system(f"taskset -p -c {cpu_name} {os.getpid()}")
@@ -360,7 +313,6 @@ def main():
         model = model.cuda()
         if args.distill:
             model_t = model_t.cuda()
-    # sys.exit()
 
     if args.distill:
         module_list = nn.ModuleList([])
@@ -416,9 +368,7 @@ def main():
         # model = DDP(model)
         # delay_allreduce delays all communication to the end of the backward pass.
 
-        # org
         # model = DDP(model, delay_allreduce=True)
-        # new add
         if args.distill:
             for i, model in enumerate(module_list):
                 module_list[i] = DDP(model, delay_allreduce=True)
@@ -472,10 +422,10 @@ def main():
     #     enable_quantization(model)
     
     if args.evaluate:
-        # new add for inference time
+        # for inference time
         # measure_inference(device, val_loader, model, criterion, val_loader_len, data_loader_type)
 
-        # validate(val_loader, model, criterion) # org
+        # validate(val_loader, model, criterion)
         [prec1, prec5] = validate(val_loader, model, criterion, val_loader_len, data_loader_type)
         print(f'Top1-acc: {prec1}, Top5-acc: {prec5}', file=f, flush=True)
         if args.distill:
@@ -493,11 +443,11 @@ def main():
         # avg_train_time = train(train_loader, model, criterion, optimizer, epoch, tb_logger) # for step
         if args.distill:
             avg_train_time, model = train_distill(train_loader, module_list, criterion_list, optimizer, epoch, lr_scheduler, train_loader_len, data_loader_type, 
-                                            val_loader, criterion, val_loader_len, # new add for evaluate test acc
+                                            val_loader, criterion, val_loader_len, # for evaluate test acc
                                                 tb_logger, args) # for cosine
         else:
             avg_train_time = train(train_loader, model, criterion, optimizer, epoch, lr_scheduler, train_loader_len, data_loader_type, 
-                                    val_loader, val_loader_len, # new add for evaluate test acc
+                                    val_loader, val_loader_len, # for evaluate test acc
                                     tb_logger) # for cosine
         # scheduler.step()
         total_time.update(avg_train_time)
@@ -511,7 +461,7 @@ def main():
         if args.local_rank == 0:
             is_best = prec1 > best_prec1
             best_prec1 = max(prec1, best_prec1)
-            best_prec5 = max(prec5, best_prec5) # new add
+            best_prec5 = max(prec5, best_prec5)
             lr = optimizer.param_groups[0]['lr']
             resLine = 'epoch: {}, lr: {:.5f}, prec1: {:.3f}, best prec1: {:.3f}, prec5: {:.3f}, best prec5: {:.3f}, avg_batch_time: {:.3f}'.format(epoch, lr, prec1, best_prec1, prec5, best_prec5, avg_train_time)
             print(resLine, file=f, flush=True)
@@ -521,7 +471,7 @@ def main():
                 'arch': args.arch,
                 'state_dict': model.state_dict(),
                 'best_prec1': best_prec1,
-                'best_prec5': best_prec5, # new add
+                'best_prec5': best_prec5, 
                 'optimizer' : optimizer.state_dict(),
             }, is_best, save_path=save_path)
             if epoch == args.epochs - 1:
@@ -531,7 +481,7 @@ def main():
                       prec1,
                       prec5,
                       args.total_batch_size / total_time.avg))
-            # new add for tensorboard
+            # for tensorboard
             tb_logger.add_scalar('val_acc/acc1', prec1, epoch)
             tb_logger.add_scalar('val_acc/acc5', prec5, epoch)
 
@@ -587,8 +537,8 @@ def train(train_loader, model, criterion, optimizer, epoch, lr_scheduler, train_
             enable_quantization(model)
 
         # # lr_scheduler.get_lr()[0] is the main lr
-        # current_lr = lr_scheduler.get_lr()[0] #org
-        current_lr = optimizer.param_groups[0]['lr'] #new
+        # current_lr = lr_scheduler.get_lr()[0] 
+        current_lr = optimizer.param_groups[0]['lr']
         
         if args.prof >= 0 and i == args.prof:
             print("Profiling begun at iteration {}".format(i))
@@ -647,7 +597,7 @@ def train(train_loader, model, criterion, optimizer, epoch, lr_scheduler, train_
             batch_time.update((time.time() - end)/args.print_freq)
             end = time.time()
 
-            # new add to measure test accuracy
+            # measure test accuracy
             # [prec1_test, prec5_test] = validate(val_loader, model, criterion, val_loader_len, data_loader_type)
 
             if args.local_rank == 0:
@@ -663,13 +613,13 @@ def train(train_loader, model, criterion, optimizer, epoch, lr_scheduler, train_
                        args.world_size*args.batch_size/batch_time.avg,
                        batch_time=batch_time,
                        loss=losses, top1=top1, top5=top5, lr=current_lr))
-                # new
+            
                 tb_logger.add_scalar('train/acc1', prec1, curr_step)
                 tb_logger.add_scalar('train/acc5', prec5, curr_step)
                 tb_logger.add_scalar('train/lr_iteration', current_lr, curr_step)
                 tb_logger.add_scalar('train/lr_epoch', current_lr, epoch)
 
-                # new for evaluating 
+                # for evaluating 
                 # tb_logger.add_scalar('val_acc/acc1_iteration', prec1_test, curr_step)
                 # tb_logger.add_scalar('val_acc/acc5_iteration', prec5_test, curr_step)
 
@@ -682,10 +632,6 @@ def train(train_loader, model, criterion, optimizer, epoch, lr_scheduler, train_
             torch.cuda.cudart().cudaProfilerStop()
             quit()
 
-        # for test
-        # if i == 2:
-        #     break
-
     return batch_time.avg
 
 
@@ -695,7 +641,6 @@ def train_distill(train_loader, module_list, criterion_list, optimizer, epoch, l
                     val_loader, criterion, val_loader_len,
                         tb_logger=None, args=None):
     
-    # ===> new add
     for module in module_list:
         module.train()
     # set teacher as eval()
@@ -707,7 +652,6 @@ def train_distill(train_loader, module_list, criterion_list, optimizer, epoch, l
 
     model = module_list[0]
     model_t = module_list[-1]
-    # ===> new add end
 
     batch_time = AverageMeter()
     losses = AverageMeter()
@@ -742,7 +686,7 @@ def train_distill(train_loader, module_list, criterion_list, optimizer, epoch, l
 
         curr_step = epoch * train_loader_len + i
         
-        # # print("cur:",curr_step)
+        # print("cur:",curr_step)
         lr_scheduler.step(curr_step)
 
         # if epoch in [1,2,3] and i==0:
@@ -755,8 +699,8 @@ def train_distill(train_loader, module_list, criterion_list, optimizer, epoch, l
             enable_quantization(model)
 
         # # lr_scheduler.get_lr()[0] is the main lr
-        # current_lr = lr_scheduler.get_lr()[0] #org
-        current_lr = optimizer.param_groups[0]['lr'] #new
+        # current_lr = lr_scheduler.get_lr()[0] 
+        current_lr = optimizer.param_groups[0]['lr']
         
         if args.prof >= 0 and i == args.prof:
             print("Profiling begun at iteration {}".format(i))
@@ -773,30 +717,21 @@ def train_distill(train_loader, module_list, criterion_list, optimizer, epoch, l
         # compute output
         if args.prof >= 0: torch.cuda.nvtx.range_push("forward")
         output = model(input)
-        # new add
         with torch.no_grad():
             output_t = model_t(input)
 
         if args.prof >= 0: torch.cuda.nvtx.range_pop()
 
-        # loss = criterion(output, target) # org
-        # # new add, cls + kl div
+        # loss = criterion(output, target)
+        # cls + kl div
         loss_cls = criterion_cls(output, target)
         loss_div = criterion_div(output, output_t)
-        loss = args.gamma * loss_cls + args.alpha * loss_div   # + opt.beta * loss_kd
+        loss = args.gamma * loss_cls + args.alpha * loss_div
         if i == 0:
             print("\033[91m{}\033[00m" .format(f"gamma: {args.gamma}, alpha: {args.alpha}"))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
-
-        # new add for release memory
-        # gpu_usage()
-        # del loss_cls, loss_div
-        # del output_t
-        # gc.collect()
-        # torch.cuda.empty_cache()
-        # gpu_usage()
 
         if args.prof >= 0: torch.cuda.nvtx.range_push("backward")
         if args.opt_level is not None:
@@ -835,7 +770,7 @@ def train_distill(train_loader, module_list, criterion_list, optimizer, epoch, l
             batch_time.update((time.time() - end)/args.print_freq)
             end = time.time()
 
-            # new add to measure test accuracy 
+            # measure test accuracy 
             # [prec1_test, prec5_test] = validate(val_loader, model, criterion, val_loader_len, data_loader_type)
 
             if args.local_rank == 0:
@@ -851,13 +786,13 @@ def train_distill(train_loader, module_list, criterion_list, optimizer, epoch, l
                        args.world_size*args.batch_size/batch_time.avg,
                        batch_time=batch_time,
                        loss=losses, top1=top1, top5=top5, lr=current_lr))
-                # new
+                
                 tb_logger.add_scalar('train/acc1', prec1, curr_step)
                 tb_logger.add_scalar('train/acc5', prec5, curr_step)
                 tb_logger.add_scalar('train/lr_iteration', current_lr, curr_step)
                 tb_logger.add_scalar('train/lr_epoch', current_lr, epoch)
 
-                # new for evaluating 
+                # for evaluating 
                 # tb_logger.add_scalar('val_acc/acc1_iteration', prec1_test, curr_step)
                 # tb_logger.add_scalar('val_acc/acc5_iteration', prec5_test, curr_step)
 
@@ -869,10 +804,6 @@ def train_distill(train_loader, module_list, criterion_list, optimizer, epoch, l
             print("Profiling ended at iteration {}".format(i))
             torch.cuda.cudart().cudaProfilerStop()
             quit()
-
-        # for test
-        # if i == 2:
-        #     break
 
     return batch_time.avg, model
 
@@ -1001,11 +932,6 @@ def adjust_learning_rate(optimizer, epoch, args):
     
 
 def init_lr_scheduler(optimizer):
-    # base_lr==: 0.0001
-    # warmup_lr: 0.004
-    # warmup_steps: 2500
-    # max_iter: 250000
-    # min_lr: 0.0 
     return Cosine(optimizer, max_iter = 250000, min_lr = 0.0, base_lr = 0.0001, warmup_lr = 0.004, warmup_steps = 2500)
 
     # below is the setup adopted to for single gpu apex case

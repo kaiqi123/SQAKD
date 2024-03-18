@@ -4,7 +4,6 @@ from torch.nn.modules.loss import _Loss
 import torch.nn.functional as F
 import torchvision.transforms as transforms
 
-# new
 import numpy as np
 import logging
 import os
@@ -12,7 +11,6 @@ _logger = None
 _logger_fh = None
 _logger_names = []
 
-# new
 from GPUtil import showUtilization as gpu_usage
 from numba import cuda
 
@@ -40,7 +38,6 @@ def free_gpu_cache():
     print("GPU Usage after emptying the cache")
     gpu_usage()
 
-# following adjust_learning_rate() in CRD code
 def adjust_learning_rate_crd(epoch, opt, optimizer, logger=None):
     """Sets the learning rate to the initial LR decayed by decay rate every steep step"""
     steps = np.sum(epoch > np.asarray(opt.lr_decay_epochs))
@@ -49,7 +46,7 @@ def adjust_learning_rate_crd(epoch, opt, optimizer, logger=None):
         for param_group in optimizer.param_groups:
             param_group['lr'] = new_lr    
     
-    # # new add, log lr
+    # log lr
     # for i, param_group in enumerate(optimizer.param_groups):
     #     logger.log_value(f'{i}_learning_rate_epoch', param_group['lr'], epoch)
     #     # print(f"{i}_learning_rate_epoch, {param_group['lr']}, {epoch}")

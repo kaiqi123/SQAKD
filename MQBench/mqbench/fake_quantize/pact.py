@@ -1,10 +1,6 @@
 import torch
 from torch.nn.parameter import Parameter
-
 from mqbench.fake_quantize.quantize_base import QuantizeBase
-
-# new
-from mqbench.fake_quantize.modules import FakeAffineTensorQuantFunction_STE, FakeAffineTensorQuantFunction_EWGS, FakeAffineTensorQuantFunction_Uscheduler
 
 
 class PACTFakeQuantize(QuantizeBase):
@@ -15,12 +11,7 @@ class PACTFakeQuantize(QuantizeBase):
             self.n_alpha = Parameter(torch.tensor([-alpha]))
         self.register_buffer('scale', torch.tensor([1.0], dtype=torch.float))
         self.register_buffer('zero_point', torch.tensor([0], dtype=torch.int))
-        # new
-        print(f"====> PACTFakeQuantize: {backward_method}")
         self.backward_method = backward_method
-        if self.backward_method == "Uscheduler":
-            # self.u_scheduler = self.define_u_scheduler(method = "PACT", u_init = 1.0e-08, u_max = 1.0e-06)
-            self.u_scheduler = self.define_u_scheduler(method = "PACT", u_init = 1.0e-08, u_max = 5.0e-08) # 6.0e-08 at iteration 100k
 
 
     @torch.jit.export
@@ -56,25 +47,5 @@ class PACTFakeQuantize(QuantizeBase):
             self.zero_point.copy_(_zero_point)
 
         if self.fake_quant_enabled[0] == 1:
-            # org
-            # X = torch.fake_quantize_per_tensor_affine(X, self.scale.item(), int(self.zero_point.item()), self.quant_min, self.quant_max)
-            # new
-            # print(f"PACT, per tensor, {self.backward_method}")
-            if self.backward_method == "org":
-                X = torch.fake_quantize_per_tensor_affine(X, self.scale.item(), int(self.zero_point.item()), self.quant_min, self.quant_max) 
-            elif self.backward_method == "STE":
-                X = FakeAffineTensorQuantFunction_STE.apply(X, self.scale.item(), int(self.zero_point.item()), self.quant_min, self.quant_max) 
-            elif self.backward_method == "EWGS":
-                X = FakeAffineTensorQuantFunction_EWGS.apply(X, self.scale.item(), int(self.zero_point.item()), self.quant_min, self.quant_max) 
-            elif self.backward_method == "Uscheduler":
-                self.u_scheduler.step()
-                X = FakeAffineTensorQuantFunction_Uscheduler.apply(X, self.scale.item(), int(self.zero_point.item()), self.quant_min, self.quant_max, self.u_scheduler.u) 
-            else:
-                raise NotImplementedError(f"Not implement {self.backward_method}!")
-            # for test
-            # X1 = torch.fake_quantize_per_tensor_affine(X, self.scale.item(), int(self.zero_point.item()), self.quant_min, self.quant_max)
-            # X2 = FakeAffineTensorQuantFunction_EWGS.apply(X, self.scale.item(), int(self.zero_point.item()), self.quant_min, self.quant_max)
-            # for i in range(len(X1[0][0][0])):
-            #     print(X1[0][0][0][i], X2[0][0][0][i])
-            # sys.exit()
+            X = torch.fake_quantize_per_tensor_affine(X, self.scale.item(), int(self.zero_point.item()), self.quant_min, self.quant_max)
         return X
