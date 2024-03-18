@@ -28,7 +28,7 @@ To get results on Tiny-Imagenet, please follow the instructions in `TinyImageNet
 
 
 ## Citation
-If you think this repo is helpful for your research, please consider citing the paper:
+If you think this repo is helpful for your research, please consider citing the paper: Will add paper reference after published
 
 
 
