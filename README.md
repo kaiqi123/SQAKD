@@ -28,33 +28,27 @@ To get results on Tiny-Imagenet, please follow the instructions in `TinyImageNet
 
 
 ## Citation
-If you think this repo is helpful for your research, please consider citing the paper: Will add paper reference after published
+If you think this repo is helpful for your research, please consider citing the paper:
 
-
+```
+@misc{zhao2024selfsupervised,
+      title={Self-Supervised Quantization-Aware Knowledge Distillation}, 
+      author={Kaiqi Zhao and Ming Zhao},
+      year={2024},
+      eprint={2403.11106},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+```
 
 
 ## Reference
 
-@inproceedings{tian2019crd,
-  title={Contrastive Representation Distillation},
-  author={Yonglong Tian and Dilip Krishnan and Phillip Isola},
-  booktitle={International Conference on Learning Representations},
-  year={2020}
-}
+Tian, Yonglong, Dilip Krishnan, and Phillip Isola. "Contrastive Representation Distillation." International Conference on Learning Representations. 2019.
 
-@article{li2021mqbench,
-  title={Mqbench: Towards reproducible and deployable model quantization benchmark},
-  author={Li, Yuhang and Shen, Mingzhu and Ma, Jian and Ren, Yan and Zhao, Mingxin and Zhang, Qi and Gong, Ruihao and Yu, Fengwei and Yan, Junjie},
-  journal={arXiv preprint arXiv:2111.03759},
-  year={2021}
-}
+Li, Yuhang, et al. "Mqbench: Towards reproducible and deployable model quantization benchmark." arXiv preprint arXiv:2111.03759 (2021).
 
-@inproceedings{lee2021network,
-  title={Network Quantization with Element-wise Gradient Scaling},
-  author={Lee, Junghyup and Kim, Dohyung and Ham, Bumsub},
-  booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
-  year={2021}
-}
+Lee, Junghyup, Dohyung Kim, and Bumsub Ham. "Network quantization with element-wise gradient scaling." Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2021.
 
 ## Reference License
 
