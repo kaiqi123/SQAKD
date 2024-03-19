@@ -8,7 +8,7 @@ The link of the paper is: https://arxiv.org/abs/2403.11106.
 
 The overall workflow of SQAKD is as follows:
 
-![Workflow of SQAKD](https://github.com/kaiqi123/SQAKD/Images/SQAKD_workflow.png)
+![Workflow of SQAKD](https://github.com/kaiqi123/SQAKD/blob/cacf3000aaf980d79f2905de2ca87eff1449134f/Images/SQAKD_workflow.png)
 
 
 ## Installation
