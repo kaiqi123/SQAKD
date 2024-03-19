@@ -10,9 +10,9 @@ We implemented SQAKD on PyTorch version 1.10.0 and Python version 3.9.7.
 
 We used four Nvidia RTX 2080 GPUs for model training and conduct inference experiments on Jetson Nano using NVIDIA TensorRT.
 
-To get results on CIFAR-10/100, please follow the instructions in `CIFAR/scripts/requirement.sh`.
+To run experiments on CIFAR-10/100, please follow the instructions in `CIFAR/scripts/requirement.sh`.
 
-To get results on Tiny-Imagenet, please follow the instructions in `TinyImageNet/scripts/requirement.sh`.
+To run experiments on Tiny-Imagenet, please follow the instructions in `TinyImageNet/scripts/requirement.sh`.
 
 ## Running
 
