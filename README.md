@@ -2,7 +2,13 @@
 
 This repo implements the paper published in **AISTATS 2024**:
 
-**Self-Supervised Quantization-Aware Knowledge Distillation** (termed SQAKD)
+K. Zhao, M. Zhao, **Self-Supervised Quantization-Aware Knowledge Distillation,** Proceedings of the 27th International Conference on Artificial Intelligence and Statistics (AISTATS), May 2024. (Acceptance Rate: 27.6%)
+
+The link of the paper is: https://arxiv.org/abs/2403.11106.
+
+The overall workflow of SQAKD is as follows:
+
+![Workflow of SQAKD](https://github.com/kaiqi123/CKTF/blob/680d36c14375e3b0b6469cd85da052dc09698349/CKTF_pattern.png)
 
 
 ## Installation
