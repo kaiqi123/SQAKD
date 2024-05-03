@@ -4,7 +4,7 @@ This repo implements the paper published in **AISTATS 2024**:
 
 K. Zhao, M. Zhao, **Self-Supervised Quantization-Aware Knowledge Distillation,** Proceedings of the 27th International Conference on Artificial Intelligence and Statistics (AISTATS), May 2024. (Acceptance Rate: 27.6%)
 
-The link of the paper is: https://arxiv.org/abs/2403.11106.
+The link of the paper is: https://proceedings.mlr.press/v238/zhao24d.html.
 
 The overall workflow of SQAKD is as follows:
 
